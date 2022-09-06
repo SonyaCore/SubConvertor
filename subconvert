@@ -1,0 +1,56 @@
+#!/bin/env python3
+## Name:    SubConvertor
+## Author:  SoniaCore
+## Usage:   Convert Windows cp1256 to UTF-8 for fixing Subtitle issue
+
+# main library
+import sys , os
+from chardet import detect
+
+# setting color to output
+class colors:
+    reset = '\033[0m'
+    bold = '\033[01m'
+    disable = '\033[02m'
+ 
+    class fg:
+            green = '\033[32m'
+            blue = '\033[34m'
+
+if len(sys.argv) <= 1:
+    print(f'''{colors.fg.green}SubConvertor{colors.reset}
+usage: subconvert file''')
+
+if __name__ == '__main__':
+    # Opening files with sysargv
+    for source in sys.argv[1:]:
+        open(source, 'r')
+
+        # Detect Encoding File Type
+        def get_encoding_type(file):
+            with open(file, 'rb') as f:
+                rawdata = f.read()
+            return detect(rawdata)['encoding']
+
+        # Encoding whitelist
+        encoding_method_whitelist = ['utf8', 'ascii','UTF-8-SIG']
+
+        # Get Encoding Type
+        codec_detect = get_encoding_type(source)
+        print(source , ' ' , codec_detect)
+
+        if codec_detect not in encoding_method_whitelist:
+            try: 
+                with open(source, 'rt', encoding="cp1256") as f, open(f"{source}.converted.srt", 'wt', encoding='utf_8_sig') as e:
+                    text = f.read()
+                    e.write(text)
+
+                os.remove(source) # Remove old file
+                os.rename(f"{source}.converted.srt", source) # Rename new converted file
+            except UnicodeDecodeError:
+                print('Decode Error')
+            except UnicodeEncodeError:
+                print('Encode Error')
+
+        else:
+            print(f"Current Format of {colors.fg.blue + source + colors.reset} is {colors.fg.green + codec_detect + colors.reset } converting not required")
